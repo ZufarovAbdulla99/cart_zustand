@@ -1,19 +1,10 @@
-import { useEffect, useState } from "react";
 import useCartStore from "./store/cartStore";
-import axios from "axios";
+import { useFetch } from "./utils/hooks/useFetch";
+import { RefreshCcw } from "lucide-react";
 
 function App() {
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    // console.log("API URL:", import.meta.env.VITE_API_URL);
-    async function fetchData() {
-      const response = await axios.get(import.meta.env.VITE_API_URL);
-      // console.log("API response:", response.data);
-      setProducts(response.data.products);
-    }
-    fetchData();
-  }, []);
+  const { data, isLoading, error, refetch } = useFetch(import.meta.env.VITE_API_URL)
+  const products = data.products
 
   const cartProducts = useCartStore((state) => state.products);
   const addProduct = useCartStore((state) => state.addProduct);
@@ -40,6 +31,35 @@ function App() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <section className="h-screen flex justify-center items-center">
+        Loading...
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section>
+        {error && (
+          <div>
+            <p className="text-red-500 mb-2">{error.message}</p>
+            <button
+              onClick={refetch}
+              className="border rounded-md py-2 px-3 bg-slate-100"
+            >
+              Try again
+              <span>
+                <RefreshCcw className="ml-2 inline-block w-5" />
+              </span>
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Elektronika Do'koni</h1>
@@ -49,7 +69,7 @@ function App() {
         <div>
           <h2 className="text-2xl font-semibold mb-4">Mahsulotlar</h2>
           <div className="grid grid-cols-2 gap-4">
-            {products.map((product) => (
+            {products?.map((product) => (
               <div
                 key={product.id}
                 className="border p-4 rounded-lg text-center"
